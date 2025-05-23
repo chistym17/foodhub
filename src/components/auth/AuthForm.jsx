@@ -3,9 +3,11 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/hooks/useAuth';
 
 const AuthForm = ({ mode = 'signin' }) => {
   const router = useRouter();
+  const { updateUserState } = useAuth();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -24,7 +26,10 @@ const AuthForm = ({ mode = 'signin' }) => {
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/${mode}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
         credentials: 'include',
         body: JSON.stringify(formData)
       });
@@ -35,8 +40,11 @@ const AuthForm = ({ mode = 'signin' }) => {
         throw new Error(data.message || 'Authentication failed');
       }
 
-      router.push('/dashboard');
+      await updateUserState();
+      
+      router.push('/');
     } catch (err) {
+      console.error('Auth error:', err);
       setError(err.message);
     } finally {
       setLoading(false);
