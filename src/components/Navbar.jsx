@@ -1,8 +1,14 @@
 'use client';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 const Navbar = () => {
+  const pathname = usePathname();
+  const isAuthPage = pathname === '/signin' || pathname === '/signup';
+
+  if (isAuthPage) return null;
+
   return (
     <motion.nav 
       initial={{ y: -100 }}
@@ -30,20 +36,24 @@ const Navbar = () => {
           </div>
 
           <div className="flex items-center space-x-4">
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="px-4 py-2 text-gray-600 hover:text-gray-900"
-            >
-              Sign In
-            </motion.button>
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Sign Up
-            </motion.button>
+            <Link href="/signin">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="px-4 py-2 text-gray-600 hover:text-gray-900 font-medium"
+              >
+                Sign In
+              </motion.button>
+            </Link>
+            <Link href="/signup">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+              >
+                Sign Up
+              </motion.button>
+            </Link>
           </div>
         </div>
       </div>
