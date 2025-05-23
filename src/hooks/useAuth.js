@@ -26,7 +26,8 @@ export function AuthProvider({ children }) {
                 id: decoded.id,
                 email: decoded.email,
                 role: decoded.role,
-                name: decoded.name
+                name: decoded.name,
+                country: decoded.country
               });
             } else {
               setUser(null);
@@ -76,7 +77,8 @@ export function AuthProvider({ children }) {
           id: decoded.id,
           email: decoded.email,
           role: decoded.role,
-          name: decoded.name
+          name: decoded.name,
+          country: decoded.country
         });
       }
     } catch (error) {
