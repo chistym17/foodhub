@@ -1,4 +1,5 @@
 import { AuthProvider } from '@/hooks/useAuth';
+import { CartProvider } from '@/components/cart/CartContext';
 import './globals.css';
 
 export const metadata = {
@@ -11,7 +12,9 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <body>
         <AuthProvider>
-          {children}
+          <CartProvider>
+            {children}
+          </CartProvider>
         </AuthProvider>
       </body>
     </html>

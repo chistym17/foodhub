@@ -3,10 +3,13 @@ import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
+import { useCart } from './cart/CartContext';
+import { ShoppingCartIcon } from '@heroicons/react/24/outline';
 
 const Navbar = () => {
   const pathname = usePathname();
   const { user, loading, logout, isAuthenticated } = useAuth();
+  const { setIsCartOpen, getCartCount } = useCart();
   const isAuthPage = pathname === '/signin' || pathname === '/signup';
 
   if (isAuthPage) return null;
@@ -38,6 +41,22 @@ const Navbar = () => {
           </div>
 
           <div className="flex items-center space-x-4">
+            {isAuthenticated && (
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setIsCartOpen(true)}
+                className="relative p-2 text-gray-600 hover:text-gray-900"
+              >
+                <ShoppingCartIcon className="h-6 w-6" />
+                {getCartCount() > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-blue-600 text-white text-xs font-medium h-5 w-5 rounded-full flex items-center justify-center">
+                    {getCartCount()}
+                  </span>
+                )}
+              </motion.button>
+            )}
+            
             {loading ? (
               <div className="h-10 w-32 bg-gray-200 animate-pulse rounded-lg" />
             ) : isAuthenticated ? (

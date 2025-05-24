@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import RestaurantCard from '@/components/restaurants/RestaurantCard';
+import Navbar from '@/components/Navbar';
 import { motion } from 'framer-motion';
 
 const RestaurantsPage = () => {
@@ -105,46 +106,49 @@ const RestaurantsPage = () => {
   }
 
   return (
-    <div className="min-h-screen pt-20 px-4 pb-12">
-      <div className="max-w-[1400px] mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-12"
-        >
-          <h1 className="text-4xl font-bold text-gray-900 mb-3">
-            {user.country === 'INDIA' ? 'Indian' : 'American'} Restaurants
-          </h1>
-          <p className="text-lg text-gray-600">
-            Discover the best {user.country.toLowerCase()} cuisine in your area
-          </p>
-        </motion.div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
-          {restaurants.map((restaurant, index) => (
-            <motion.div
-              key={restaurant.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-            >
-              <RestaurantCard restaurant={restaurant} />
-            </motion.div>
-          ))}
-        </div>
-
-        {restaurants.length === 0 && (
-          <div className="text-center py-16">
-            <h2 className="text-2xl font-medium text-gray-900 mb-3">
-              No restaurants found
-            </h2>
+    <>
+      <Navbar />
+      <div className="min-h-screen pt-20 px-4 pb-12">
+        <div className="max-w-[1400px] mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center mb-12"
+          >
+            <h1 className="text-4xl font-bold text-gray-900 mb-3">
+              {user.country === 'INDIA' ? 'Indian' : 'American'} Restaurants
+            </h1>
             <p className="text-lg text-gray-600">
-              We couldn't find any restaurants in your area
+              Discover the best {user.country.toLowerCase()} cuisine in your area
             </p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+            {restaurants.map((restaurant, index) => (
+              <motion.div
+                key={restaurant.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+              >
+                <RestaurantCard restaurant={restaurant} />
+              </motion.div>
+            ))}
           </div>
-        )}
+
+          {restaurants.length === 0 && (
+            <div className="text-center py-16">
+              <h2 className="text-2xl font-medium text-gray-900 mb-3">
+                No restaurants found
+              </h2>
+              <p className="text-lg text-gray-600">
+                We couldn't find any restaurants in your area
+              </p>
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 
