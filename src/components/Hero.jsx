@@ -1,7 +1,7 @@
 'use client';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
-
+import Link from 'next/link';
 const Hero = () => {
   return (
     <div className="relative min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 pt-16">
@@ -35,13 +35,14 @@ const Hero = () => {
                 Order Now
               </motion.button>
               
-              <motion.button
+              <motion.a
+                href="/restaurants"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="px-8 py-4 bg-white text-gray-800 rounded-lg text-lg font-semibold border-2 border-gray-200 hover:border-gray-300 transition-colors"
+                className="inline-flex px-8 py-4 bg-white text-gray-800 rounded-lg text-lg font-semibold border-2 border-gray-200 hover:border-gray-300 transition-colors cursor-pointer"
               >
                 View Restaurants
-              </motion.button>
+              </motion.a>
             </div>
 
             <div className="grid grid-cols-3 gap-8 pt-8">
