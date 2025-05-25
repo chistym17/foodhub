@@ -4,6 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { motion, AnimatePresence } from 'framer-motion';
 import Navbar from '@/components/Navbar';
 import { useRouter } from 'next/navigation';
+import toast from 'react-hot-toast';
 import {
   ArrowLeftIcon,
   CreditCardIcon,
@@ -12,7 +13,8 @@ import {
   TrashIcon,
   ExclamationTriangleIcon,
   UserIcon,
-  XMarkIcon
+  XMarkIcon,
+  ExclamationCircleIcon
 } from '@heroicons/react/24/outline';
 
 const LoadingSkeleton = () => (
@@ -144,6 +146,52 @@ const PaymentMethodModal = ({ isOpen, onClose, onSubmit, initialData, selectedUs
   );
 };
 
+const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm, paymentMethod }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        className="bg-white rounded-xl shadow-xl max-w-md w-full p-6"
+      >
+        <div className="flex items-center gap-3 mb-4">
+          <div className="flex-shrink-0">
+            <ExclamationCircleIcon className="w-6 h-6 text-red-500" />
+          </div>
+          <h3 className="text-lg font-medium text-gray-900">Delete Payment Method</h3>
+        </div>
+
+        <div className="mb-6">
+          <p className="text-sm text-gray-500">
+            Are you sure you want to delete this {paymentMethod?.type.toLowerCase().replace('_', ' ')} payment method?
+            This action cannot be undone.
+          </p>
+        </div>
+
+        <div className="flex justify-end gap-3">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={onConfirm}
+            className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors duration-200"
+          >
+            Delete
+          </button>
+        </div>
+      </motion.div>
+    </div>
+  );
+};
+
 const UserTable = ({ users, onAddPaymentMethod, onEditPaymentMethod, onDeletePaymentMethod }) => {
   const [expandedUser, setExpandedUser] = useState(null);
 
@@ -185,67 +233,79 @@ const UserTable = ({ users, onAddPaymentMethod, onEditPaymentMethod, onDeletePay
               <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
-            {users.map((user) => (
-              <>
-                <tr 
-                  key={user.id}
-                  className="hover:bg-gray-50 transition-colors duration-150 cursor-pointer"
-                  onClick={() => setExpandedUser(expandedUser === user.id ? null : user.id)}
-                >
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
-                        <UserIcon className="w-4 h-4 text-gray-600" />
-                      </div>
-                      <div>
-                        <div className="font-medium text-gray-900">{user.name}</div>
-                        <div className="text-sm text-gray-500">{user.email}</div>
-                      </div>
+          {users.map((user) => (
+            <tbody key={user.id} className="divide-y divide-gray-100">
+              <tr 
+                className="hover:bg-gray-50 transition-colors duration-150 cursor-pointer"
+                onClick={() => setExpandedUser(expandedUser === user.id ? null : user.id)}
+              >
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
+                      <UserIcon className="w-4 h-4 text-gray-600" />
                     </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getRoleBadgeColor(user.role)}`}>
-                      {user.role}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {user.country}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {user._count.orders}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {user._count.paymentMethods}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right">
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onAddPaymentMethod(user);
-                      }}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors duration-200"
-                    >
-                      <PlusIcon className="w-4 h-4" />
-                      Add Payment Method
-                    </motion.button>
-                  </td>
-                </tr>
-                {expandedUser === user.id && user.paymentMethods?.length > 0 && (
-                  <tr>
-                    <td colSpan="6" className="px-6 py-4 bg-gray-50">
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between">
-                          <h4 className="text-sm font-medium text-gray-900">Payment Methods</h4>
-                          <button
-                            onClick={() => setExpandedUser(null)}
-                            className="text-gray-400 hover:text-gray-500"
-                          >
-                            <XMarkIcon className="w-5 h-5" />
-                          </button>
-                        </div>
+                    <div>
+                      <div className="font-medium text-gray-900">{user.name}</div>
+                      <div className="text-sm text-gray-500">{user.email}</div>
+                    </div>
+                  </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getRoleBadgeColor(user.role)}`}>
+                    {user.role}
+                  </span>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {user.country}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {user._count?.orders || 0}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  {user.paymentMethods && user.paymentMethods.length > 0 ? (
+                    <div className="flex flex-wrap gap-1">
+                      {user.paymentMethods.map((method) => (
+                        <span
+                          key={method.id}
+                          className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${getPaymentTypeColor(method.type)}`}
+                        >
+                          {method.type.replace('_', ' ')}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <span className="text-sm text-gray-500">No payment methods</span>
+                  )}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-right">
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onAddPaymentMethod(user);
+                    }}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors duration-200"
+                  >
+                    <PlusIcon className="w-4 h-4" />
+                    Add Payment Method
+                  </motion.button>
+                </td>
+              </tr>
+              {expandedUser === user.id && (
+                <tr>
+                  <td colSpan="6" className="px-6 py-4 bg-gray-50">
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <h4 className="text-sm font-medium text-gray-900">Payment Methods</h4>
+                        <button
+                          onClick={() => setExpandedUser(null)}
+                          className="text-gray-400 hover:text-gray-500"
+                        >
+                          <XMarkIcon className="w-5 h-5" />
+                        </button>
+                      </div>
+                      {user.paymentMethods && user.paymentMethods.length > 0 ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                           {user.paymentMethods.map((method) => (
                             <motion.div
@@ -260,13 +320,13 @@ const UserTable = ({ users, onAddPaymentMethod, onEditPaymentMethod, onDeletePay
                                     {method.type.replace('_', ' ')}
                                   </span>
                                   <p className="text-sm text-gray-500">{method.details}</p>
-                                  {method.payments?.length > 0 && (
+                                  {method._count?.payments > 0 && (
                                     <p className="text-xs text-gray-400">
-                                      {method.payments.length} payment{method.payments.length !== 1 ? 's' : ''}
+                                      {method._count.payments} payment{method._count.payments !== 1 ? 's' : ''}
                                     </p>
                                   )}
                                 </div>
-                                {(!method.payments || method.payments.length === 0) && (
+                                {(!method._count?.payments || method._count.payments === 0) && (
                                   <div className="flex items-center gap-2">
                                     <motion.button
                                       whileHover={{ scale: 1.05 }}
@@ -290,13 +350,17 @@ const UserTable = ({ users, onAddPaymentMethod, onEditPaymentMethod, onDeletePay
                             </motion.div>
                           ))}
                         </div>
-                      </div>
-                    </td>
-                  </tr>
-                )}
-              </>
-            ))}
-          </tbody>
+                      ) : (
+                        <div className="text-center py-4 text-gray-500">
+                          No payment methods found for this user
+                        </div>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          ))}
         </table>
       </div>
     </div>
@@ -309,8 +373,10 @@ export default function PaymentMethods() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [editingPaymentMethod, setEditingPaymentMethod] = useState(null);
   const [selectedUser, setSelectedUser] = useState(null);
+  const [paymentMethodToDelete, setPaymentMethodToDelete] = useState(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -329,21 +395,34 @@ export default function PaymentMethods() {
 
         const data = await response.json();
         
-        // Fetch payment methods for each user
+        // Fetch payment methods for each user with payment counts
         const usersWithPaymentMethods = await Promise.all(
           data.map(async (user) => {
             const pmResponse = await fetch(
               `${process.env.NEXT_PUBLIC_API_URL}/payment-methods/user/${user.id}`,
-              { credentials: 'include' }
+              { 
+                credentials: 'include',
+                headers: {
+                  'Accept': 'application/json'
+                }
+              }
             );
             if (pmResponse.ok) {
               const paymentMethods = await pmResponse.json();
-              return { ...user, paymentMethods };
+              return { 
+                ...user, 
+                paymentMethods: Array.isArray(paymentMethods) ? paymentMethods : [paymentMethods],
+                _count: {
+                  ...user._count,
+                  paymentMethods: Array.isArray(paymentMethods) ? paymentMethods.length : 1
+                }
+              };
             }
-            return { ...user, paymentMethods: [] };
+            return { ...user, paymentMethods: [], _count: { ...user._count, paymentMethods: 0 } };
           })
         );
 
+        console.log('Final users data with payment methods:', usersWithPaymentMethods);
         setUsers(usersWithPaymentMethods);
       } catch (err) {
         console.error('Error fetching users:', err);
@@ -368,12 +447,17 @@ export default function PaymentMethods() {
     setShowModal(true);
   };
 
-  const handleDeletePaymentMethod = async (paymentMethod) => {
-    if (!confirm('Are you sure you want to delete this payment method?')) return;
+  const handleDeletePaymentMethod = (paymentMethod) => {
+    setPaymentMethodToDelete(paymentMethod);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!paymentMethodToDelete) return;
 
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/payment-methods/${paymentMethod.id}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/payment-methods/${paymentMethodToDelete.id}`,
         {
           method: 'DELETE',
           credentials: 'include'
@@ -388,11 +472,16 @@ export default function PaymentMethods() {
       // Update the users state to remove the deleted payment method
       setUsers(users.map(user => ({
         ...user,
-        paymentMethods: user.paymentMethods?.filter(pm => pm.id !== paymentMethod.id) || []
+        paymentMethods: user.paymentMethods?.filter(pm => pm.id !== paymentMethodToDelete.id) || []
       })));
+
+      toast.success('Payment method deleted successfully');
     } catch (err) {
       console.error('Error deleting payment method:', err);
-      alert(err.message);
+      toast.error(err.message);
+    } finally {
+      setShowDeleteModal(false);
+      setPaymentMethodToDelete(null);
     }
   };
 
@@ -418,9 +507,14 @@ export default function PaymentMethods() {
         setUsers(users.map(user => ({
           ...user,
           paymentMethods: user.paymentMethods?.map(pm => 
-            pm.id === updatedPaymentMethod.id ? updatedPaymentMethod : pm
+            pm.id === updatedPaymentMethod.id ? {
+              ...updatedPaymentMethod,
+              _count: { payments: pm._count?.payments || 0 }
+            } : pm
           ) || []
         })));
+
+        toast.success('Payment method updated successfully');
       } else {
         const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/payment-methods`, {
           method: 'POST',
@@ -441,12 +535,15 @@ export default function PaymentMethods() {
         setUsers(users.map(user => ({
           ...user,
           paymentMethods: user.id === selectedUser.id 
-            ? [...(user.paymentMethods || []), newPaymentMethod]
+            ? [...(user.paymentMethods || []), { ...newPaymentMethod, _count: { payments: 0 } }]
             : user.paymentMethods || []
         })));
+
+        toast.success('Payment method added successfully');
       }
     } catch (err) {
       console.error('Error saving payment method:', err);
+      toast.error(err.message);
       throw err;
     }
   };
@@ -569,6 +666,16 @@ export default function PaymentMethods() {
         onSubmit={handleModalSubmit}
         initialData={editingPaymentMethod}
         selectedUser={selectedUser}
+      />
+
+      <DeleteConfirmationModal
+        isOpen={showDeleteModal}
+        onClose={() => {
+          setShowDeleteModal(false);
+          setPaymentMethodToDelete(null);
+        }}
+        onConfirm={confirmDelete}
+        paymentMethod={paymentMethodToDelete}
       />
     </div>
   );

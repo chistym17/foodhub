@@ -110,22 +110,14 @@ export const CartProvider = ({ children }) => {
 
   const checkout = useCallback(async () => {
     if (authLoading) {
-      console.log('Auth still loading, cannot proceed with checkout');
       return;
     }
     
     if (!isAuthenticated || !user) {
-      console.log('User not authenticated, showing error notification');
       setShowNotification(true);
       setNotificationType('error');
       return;
     }
-
-    console.log('Proceeding with checkout for user:', {
-      userId: user.id,
-      userName: user.name,
-      cartItems: cartItems.length
-    });
 
     setIsLoading(true);
     try {
@@ -153,7 +145,6 @@ export const CartProvider = ({ children }) => {
       setNotificationType('checkout');
       setIsCartOpen(false);
     } catch (error) {
-      console.error('Error during checkout:', error);
       setShowNotification(true);
       setNotificationType('error');
     } finally {
@@ -210,20 +201,7 @@ const CartModal = () => {
     isAuthenticated
   } = useCart();
 
-  // Debug auth state in modal
-  useEffect(() => {
-    console.log('Auth State in CartModal:', {
-      user,
-      authLoading,
-      isAuthenticated,
-      hasUser: !!user,
-      userDetails: user ? {
-        id: user.id,
-        name: user.name,
-        role: user.role
-      } : null
-    });
-  }, [user, authLoading, isAuthenticated]);
+
 
   if (!isCartOpen) return null;
 
