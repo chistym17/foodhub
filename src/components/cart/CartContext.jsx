@@ -3,6 +3,7 @@ import { createContext, useContext, useState, useCallback, useEffect } from 'rea
 import { motion, AnimatePresence } from 'framer-motion';
 import { XMarkIcon, ShoppingCartIcon, MinusIcon, PlusIcon } from '@heroicons/react/24/outline';
 import CartNotification from './CartNotification';
+import { useAuth } from '@/hooks/useAuth';
 
 const CartContext = createContext();
 const CART_STORAGE_KEY = 'foodhub_cart';
@@ -17,6 +18,7 @@ const loadCartFromStorage = () => {
     return [];
   }
 };
+
 
 const saveCartToStorage = (cartItems) => {
   if (typeof window === 'undefined') return;
@@ -40,15 +42,21 @@ export const CartProvider = ({ children }) => {
   const [cartItems, setCartItems] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showNotification, setShowNotification] = useState(false);
+  const [notificationType, setNotificationType] = useState('add'); // 'add' or 'checkout'
+  const { user, loading: authLoading, isAuthenticated } = useAuth();
+
 
   useEffect(() => {
+    if (authLoading) return; 
+    
     const savedCart = loadCartFromStorage();
     setCartItems(savedCart);
-  }, []);
+  }, [authLoading]); 
 
   useEffect(() => {
+    if (authLoading) return; 
     saveCartToStorage(cartItems);
-  }, [cartItems]);
+  }, [cartItems, authLoading]);
 
   const addToCart = useCallback(async (item, quantity) => {
     setIsLoading(true);
@@ -100,6 +108,59 @@ export const CartProvider = ({ children }) => {
     return cartItems.reduce((count, item) => count + item.quantity, 0);
   }, [cartItems]);
 
+  const checkout = useCallback(async () => {
+    if (authLoading) {
+      console.log('Auth still loading, cannot proceed with checkout');
+      return;
+    }
+    
+    if (!isAuthenticated || !user) {
+      console.log('User not authenticated, showing error notification');
+      setShowNotification(true);
+      setNotificationType('error');
+      return;
+    }
+
+    console.log('Proceeding with checkout for user:', {
+      userId: user.id,
+      userName: user.name,
+      cartItems: cartItems.length
+    });
+
+    setIsLoading(true);
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/orders`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          userId: user.id,
+          items: cartItems.map(item => ({
+            menuItemId: item.id,
+            quantity: item.quantity
+          }))
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create order');
+      }
+
+      clearCart();
+      setShowNotification(true);
+      setNotificationType('checkout');
+      setIsCartOpen(false);
+    } catch (error) {
+      console.error('Error during checkout:', error);
+      setShowNotification(true);
+      setNotificationType('error');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user, cartItems, clearCart, authLoading, isAuthenticated]);
+
   const value = {
     cartItems,
     addToCart,
@@ -112,7 +173,12 @@ export const CartProvider = ({ children }) => {
     setIsCartOpen,
     isLoading,
     showNotification,
-    setShowNotification
+    setShowNotification,
+    checkout,
+    notificationType,
+    authLoading,
+    isAuthenticated,
+    user
   };
 
   return (
@@ -121,7 +187,8 @@ export const CartProvider = ({ children }) => {
       <CartModal />
       <CartNotification 
         isVisible={showNotification} 
-        onClose={() => setShowNotification(false)} 
+        onClose={() => setShowNotification(false)}
+        type={notificationType}
       />
     </CartContext.Provider>
   );
@@ -135,10 +202,32 @@ const CartModal = () => {
     updateQuantity, 
     removeFromCart, 
     getCartTotal,
-    getCartCount
+    getCartCount,
+    checkout,
+    isLoading,
+    user,
+    authLoading,
+    isAuthenticated
   } = useCart();
 
+  // Debug auth state in modal
+  useEffect(() => {
+    console.log('Auth State in CartModal:', {
+      user,
+      authLoading,
+      isAuthenticated,
+      hasUser: !!user,
+      userDetails: user ? {
+        id: user.id,
+        name: user.name,
+        role: user.role
+      } : null
+    });
+  }, [user, authLoading, isAuthenticated]);
+
   if (!isCartOpen) return null;
+
+  const canCheckout = !authLoading && isAuthenticated && !!user;
 
   return (
     <AnimatePresence>
@@ -240,9 +329,37 @@ const CartModal = () => {
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+                  onClick={checkout}
+                  disabled={isLoading || !canCheckout}
+                  className={`
+                    w-full py-3 rounded-lg font-medium transition-colors
+                    ${isLoading || !canCheckout
+                      ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
+                      : 'bg-blue-600 text-white hover:bg-blue-700'
+                    }
+                  `}
                 >
-                  Proceed to Checkout
+                  {isLoading ? (
+                    <div className="flex items-center justify-center gap-2">
+                      <svg className="animate-spin h-5 w-5 text-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Processing...
+                    </div>
+                  ) : authLoading ? (
+                    <div className="flex items-center justify-center gap-2">
+                      <svg className="animate-spin h-5 w-5 text-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Loading...
+                    </div>
+                  ) : !canCheckout ? (
+                    'Sign in to Checkout'
+                  ) : (
+                    'Proceed to Checkout'
+                  )}
                 </motion.button>
               </div>
             )}
