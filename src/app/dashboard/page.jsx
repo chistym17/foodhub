@@ -12,55 +12,52 @@ import {
   EnvelopeIcon,
   PhoneIcon,
   ArrowRightOnRectangleIcon,
+  ClipboardDocumentListIcon,
+  BuildingStorefrontIcon,
 } from '@heroicons/react/24/outline';
+import Link from 'next/link';
 
-const DashboardCard = ({ title, icon: Icon, onClick, children, variant = 'default' }) => {
+const DashboardCard = ({ title, description, icon: Icon, href, variant = 'default' }) => {
   const getVariantStyles = () => {
     switch (variant) {
-      case 'danger':
-        return 'border-red-100 hover:shadow-red-100/50';
       case 'admin':
-        return 'border-blue-100 hover:shadow-blue-100/50';
+        return 'bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-100 hover:border-blue-200';
+      case 'danger':
+        return 'bg-gradient-to-br from-red-50 to-pink-50 border-red-100 hover:border-red-200';
       default:
-        return 'border-gray-100 hover:shadow-gray-100/50';
+        return 'bg-gradient-to-br from-gray-50 to-white border-gray-100 hover:border-gray-200';
+    }
+  };
+
+  const getIconStyles = () => {
+    switch (variant) {
+      case 'admin':
+        return 'text-blue-600 bg-blue-100';
+      case 'danger':
+        return 'text-red-600 bg-red-100';
+      default:
+        return 'text-gray-600 bg-gray-100';
     }
   };
 
   return (
-    <motion.div
-      whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
-      onClick={onClick}
-      className={`bg-white rounded-xl shadow-sm border ${getVariantStyles()} p-6 cursor-pointer hover:shadow-md transition-all duration-200`}
-    >
-      <div className="flex items-center gap-4">
-        <div className={`w-12 h-12 bg-gradient-to-br ${
-          variant === 'danger' 
-            ? 'from-red-50 to-red-100' 
-            : variant === 'admin'
-            ? 'from-blue-50 to-indigo-50'
-            : 'from-gray-50 to-gray-100'
-        } rounded-lg flex items-center justify-center`}>
-          <Icon className={`w-6 h-6 ${
-            variant === 'danger' 
-              ? 'text-red-600' 
-              : variant === 'admin'
-              ? 'text-blue-600'
-              : 'text-gray-600'
-          }`} />
+    <Link href={href}>
+      <motion.div
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+        className={`p-6 rounded-xl border ${getVariantStyles()} transition-colors duration-200`}
+      >
+        <div className="flex items-start gap-4">
+          <div className={`p-3 rounded-lg ${getIconStyles()}`}>
+            <Icon className="w-6 h-6" />
+          </div>
+          <div>
+            <h3 className="font-semibold text-gray-900">{title}</h3>
+            <p className="text-sm text-gray-500 mt-1">{description}</p>
+          </div>
         </div>
-        <div>
-          <h3 className={`font-semibold ${
-            variant === 'danger' 
-              ? 'text-red-600' 
-              : variant === 'admin'
-              ? 'text-blue-600'
-              : 'text-gray-900'
-          }`}>{title}</h3>
-          {children}
-        </div>
-      </div>
-    </motion.div>
+      </motion.div>
+    </Link>
   );
 };
 
@@ -199,33 +196,45 @@ export default function Dashboard() {
             <div className="space-y-6">
               <DashboardCard
                 title={canManageOrders ? "All Orders" : "My Orders"}
-                icon={ShoppingBagIcon}
-                onClick={() => router.push('/dashboard/orders')}
-                variant="admin"
-              >
-                <p className="text-sm text-gray-500">
-                  {canManageOrders 
-                    ? "View, process, and manage all customer orders"
-                    : "View and track your order history"}
-                </p>
-                {canManageOrders && (
-                  <p className="text-xs text-blue-600 mt-1">
-                    You can process payments and delete orders
-                  </p>
-                )}
-              </DashboardCard>
+                description={
+                  canManageOrders
+                    ? "View and manage all orders. Process payments and delete orders as needed."
+                    : "View your order history and track your deliveries"
+                }
+                icon={ClipboardDocumentListIcon}
+                href="/dashboard/orders"
+                variant={canManageOrders ? "admin" : "default"}
+              />
 
-              <DashboardCard
-                title="Payment Methods"
-                icon={CreditCardIcon}
-                onClick={() => {/* TODO: Implement payment methods */}}
-              >
-                <p className="text-sm text-gray-500">
-                  {isAdmin 
-                    ? "Manage payment methods for all users"
-                    : "Manage your payment methods"}
-                </p>
-              </DashboardCard>
+              {isAdmin && (
+                <DashboardCard
+                  title="Payment Methods"
+                  description="Manage payment methods for all users. Add, edit, or remove payment options."
+                  icon={CreditCardIcon}
+                  href="/dashboard/payment-methods"
+                  variant="admin"
+                />
+              )}
+
+              {isAdmin && (
+                <DashboardCard
+                  title="Restaurants"
+                  description="Manage restaurant listings, menus, and settings"
+                  icon={BuildingStorefrontIcon}
+                  href="/dashboard/restaurants"
+                  variant="admin"
+                />
+              )}
+
+              {isManager && (
+                <DashboardCard
+                  title="My Restaurant"
+                  description="Manage your restaurant's menu, orders, and settings"
+                  icon={BuildingStorefrontIcon}
+                  href="/dashboard/restaurants/my-restaurant"
+                  variant="admin"
+                />
+              )}
 
               <motion.button
                 whileHover={{ scale: 1.02 }}
