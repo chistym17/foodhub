@@ -24,6 +24,8 @@ const AuthForm = ({ mode = 'signin' }) => {
     setLoading(true);
 
     try {
+      console.log('Making request to:', `${process.env.NEXT_PUBLIC_API_URL}/auth/${mode}`);
+      
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/${mode}`, {
         method: 'POST',
         headers: { 
@@ -34,14 +36,15 @@ const AuthForm = ({ mode = 'signin' }) => {
         body: JSON.stringify(formData)
       });
 
+      console.log('Response headers:', [...response.headers.entries()]);
       const data = await response.json();
+      console.log('Response data:', data);
 
       if (!response.ok) {
         throw new Error(data.message || 'Authentication failed');
       }
 
       await updateUserState();
-      
       router.push('/');
     } catch (err) {
       console.error('Auth error:', err);
